@@ -54,7 +54,7 @@ from polyfactory.constants import (
 )
 from polyfactory.exceptions import ConfigurationException, MissingBuildKwargException, ParameterException
 from polyfactory.field_meta import Null
-from polyfactory.fields import Fixture, Ignore, PostGenerated, Require, Use
+from polyfactory.fields import AlwaysNone, Fixture, Ignore, NeverNone, PostGenerated, Require, Use
 from polyfactory.utils.helpers import (
     flatten_annotation,
     get_collection_type,
@@ -334,6 +334,7 @@ class BaseFactory(ABC, Generic[T]):
         if isinstance(field_value, Fixture):
             return field_value.to_value()
 
+        # if a raw lambda is passed, invoke it
         if callable(field_value):
             return field_value()
 
@@ -946,8 +947,16 @@ class BaseFactory(ABC, Generic[T]):
         :returns: A boolean determining whether 'None' should be set for the given field_meta.
 
         """
+        field_value = hasattr(cls, field_meta.name) and getattr(cls, field_meta.name)
+        never_none = field_value and isinstance(field_value, NeverNone)
+        always_none = field_value and isinstance(field_value, AlwaysNone)
+
+        if always_none:
+            return True
+
         return (
             cls.__allow_none_optionals__
+            and not never_none
             and is_optional(field_meta.annotation)
             and create_random_boolean(random=cls.__random__)
         )
@@ -1021,12 +1030,15 @@ class BaseFactory(ABC, Generic[T]):
                 f"{field_name} is declared on the factory {cls.__name__}"
                 f" but it is not part of the model {cls.__model__.__name__}"
             )
-            if isinstance(field_value, (Use, PostGenerated, Ignore, Require)):
+            if isinstance(field_value, (Use, PostGenerated, Ignore, Require, NeverNone, AlwaysNone)):
                 raise ConfigurationException(error_message)
 
     @classmethod
     def process_kwargs(cls, **kwargs: Any) -> dict[str, Any]:
         """Process the given kwargs and generate values for the factory's model.
+
+        If you need to deeply customize field values, you'll want to override this method. This is where values are
+        generated and assigned for the fields on the model.
 
         :param kwargs: Any build kwargs.
 
@@ -1038,8 +1050,15 @@ class BaseFactory(ABC, Generic[T]):
         for field_meta in cls.get_model_fields():
             field_build_parameters = cls.extract_field_build_parameters(field_meta=field_meta, build_args=kwargs)
             if cls.should_set_field_value(field_meta, **kwargs) and not cls.should_use_default_value(field_meta):
-                if hasattr(cls, field_meta.name) and not hasattr(BaseFactory, field_meta.name):
-                    field_value = getattr(cls, field_meta.name)
+                has_field_value = hasattr(cls, field_meta.name)
+                field_value = has_field_value and getattr(cls, field_meta.name)
+
+                # NeverNone & AlwaysNone should be treated as a normally-generated field, since this changes logic
+                # within get_field_value.
+                excluded_field_value = has_field_value and isinstance(field_value, (NeverNone, AlwaysNone))
+
+                # TODO why do we need the BaseFactory check here, only dunder methods which are ignored would trigger this?  # noqa: FIX002
+                if has_field_value and not hasattr(BaseFactory, field_meta.name) and not excluded_field_value:
                     if isinstance(field_value, Ignore):
                         continue
 
@@ -1071,6 +1090,25 @@ class BaseFactory(ABC, Generic[T]):
         for field_name, post_generator in generate_post.items():
             result[field_name] = post_generator.to_value(field_name, result)
 
+        return cls.post_generate(result)
+
+    @classmethod
+    def post_build(cls, model: T) -> T:
+        """Post-create hook. Helpful for building additional database associations or running logic which requires the
+        fully-created model.
+
+        :param model: The created model instance.
+        :returns: The (optionally) mutated model.
+        """
+        return model
+
+    @classmethod
+    def post_generate(cls, result: dict[str, Any]) -> dict[str, Any]:
+        """Post-generate hook. Helpful for mutating or adding additional fields right before model creation.
+
+        :param result: The kwargs that will be passed to the model.
+        :returns: The (optionally) mutated kwargs.
+        """
         return result
 
     @classmethod
@@ -1131,7 +1169,11 @@ class BaseFactory(ABC, Generic[T]):
         :returns: An instance of type T.
 
         """
-        return cast("T", cls.__model__(**cls.process_kwargs(**kwargs)))
+        created_model = cast("T", cls.__model__(**cls.process_kwargs(**kwargs)))
+
+        cls.post_build(created_model)
+
+        return created_model
 
     @classmethod
     def batch(cls, size: int, **kwargs: Any) -> list[T]:
@@ -1156,6 +1198,7 @@ class BaseFactory(ABC, Generic[T]):
         """
         for data in cls.process_kwargs_coverage(**kwargs):
             instance = cls.__model__(**data)
+            cls.post_build(instance)
             yield cast("T", instance)
 
     @classmethod

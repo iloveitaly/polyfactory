@@ -147,7 +147,7 @@ class PydanticFieldMeta(FieldMeta):
         min_collection_length: int | None = None,
         max_collection_length: int | None = None,
     ) -> PydanticFieldMeta:
-        """Create an instance from a pydantic field info.
+        """Create an instance from a pydantic field info. Used by `get_model_fields` to generate field list for a model.
 
         :param field_name: The name of the field.
         :param field_info: A pydantic FieldInfo instance.
@@ -182,14 +182,21 @@ class PydanticFieldMeta(FieldMeta):
         if is_union(annotation):
             constraints = {}
             children = []
+
+            # create a child for each of the possible union values
             for arg in get_args(annotation):
+                # don't add the NoneType in an optional to the list of children
                 if arg is NoneType:
                     continue
                 child_field_info = FieldInfo.from_annotation(arg)
                 merged_field_info = FieldInfo.merge_field_infos(field_info, child_field_info)
+
                 children.append(
+                    # recurse for each element of the union
                     cls.from_field_info(
-                        field_name="",
+                        # this is a fake field name, but it makes it possible to debug which type variant
+                        # is the source of an exception downstream
+                        field_name=field_name,
                         field_info=merged_field_info,
                         use_alias=use_alias,
                     ),
@@ -517,7 +524,11 @@ class ModelFactory(Generic[T], BaseFactory[T]):
 
         processed_kwargs = cls.process_kwargs(**kwargs)
 
-        return cls._create_model(kwargs["_build_context"], **processed_kwargs)
+        created_model = cls._create_model(kwargs["_build_context"], **processed_kwargs)
+
+        cls.post_build(created_model)
+
+        return created_model
 
     @classmethod
     def _get_build_context(cls, build_context: BaseBuildContext | PydanticBuildContext | None) -> PydanticBuildContext:
@@ -568,7 +579,11 @@ class ModelFactory(Generic[T], BaseFactory[T]):
             )
 
         for data in cls.process_kwargs_coverage(**kwargs):
-            yield cls._create_model(_build_context=kwargs["_build_context"], **data)
+            created_model = cls._create_model(_build_context=kwargs["_build_context"], **data)
+
+            cls.post_build(created_model)
+
+            yield created_model
 
     @classmethod
     def is_custom_root_field(cls, field_meta: FieldMeta) -> bool:

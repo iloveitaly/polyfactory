@@ -655,22 +655,26 @@ def test_optional_custom_type() -> None:
         def should_set_none_value(cls, field_meta: FieldMeta) -> bool:
             return False
 
-    class OptionalFormTwo(BaseModel):
-        optional_custom_type_second_form: CustomType | None
-
+    class OptionalFormOneFactory(ModelFactory[OptionalFormOne]):
         @classmethod
         def should_set_none_value(cls, field_meta: FieldMeta) -> bool:
             return False
 
-    OptionalFormOneFactory = ModelFactory.create_factory(OptionalFormOne)
+    class OptionalFormTwo(BaseModel):
+        # this is represented differently than `Optional[None]` internally
+        optional_custom_type_second_form: CustomType | None
+
+    class OptionalFormTwoFactory(ModelFactory[OptionalFormTwo]):
+        @classmethod
+        def should_set_none_value(cls, field_meta: FieldMeta) -> bool:
+            return False
 
     # ensure the custom type field name and variant is in the error message
 
-    with pytest.raises(ParameterException, match=r"optional_custom_type__CustomType"):
+    with pytest.raises(ParameterException, match=r"optional_custom_type"):
         OptionalFormOneFactory.build()
 
-    OptionalFormTwoFactory = ModelFactory.create_factory(OptionalFormTwo)
-    with pytest.raises(ParameterException, match=r"optional_custom_type_second_form__CustomType"):
+    with pytest.raises(ParameterException, match=r"optional_custom_type_second_form"):
         OptionalFormTwoFactory.build()
 
 

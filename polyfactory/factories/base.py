@@ -334,7 +334,7 @@ class BaseFactory(ABC, Generic[T]):
         if isinstance(field_value, Fixture):
             return field_value.to_value()
 
-        # if a raw lambda is passed, invoke it
+        # if a callable is passed, invoke it
         if callable(field_value):
             return field_value()
 

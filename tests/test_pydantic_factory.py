@@ -1528,3 +1528,20 @@ def test_alias_overrides() -> None:
 
     instance = FooFactory.build()
     assert instance.name == "John"  # Should use the overridden alias
+
+
+def test_post_build_classmethod() -> None:
+    class Model(BaseModel):
+        i: int
+        j: int
+
+    class Factory(ModelFactory[Model]):
+        __model__ = Model
+
+        @classmethod
+        def post_build(cls, model: Model) -> Model:
+            model.i = model.j + 10
+            return model
+
+    result = Factory.build()
+    assert result.i == result.j + 10

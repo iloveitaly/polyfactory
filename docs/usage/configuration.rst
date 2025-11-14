@@ -164,3 +164,39 @@ forward reference names to their resolved types.
 .. note::
     The Pydantic ModelFactory has a default forward reference mapping for ``JsonValue`` to resolve to ``str``
     to avoid recursive issues with Pydantic's JsonValue type.
+
+Lifecycle Hooks
+---------------
+
+Factories provide two lifecycle hooks that allow you to customize the model creation process:
+
+Post-Build Hook
+^^^^^^^^^^^^^^^^
+
+The :meth:`~polyfactory.factories.base.BaseFactory.post_build` hook is called after a model instance
+is created. This is useful for running custom logic on the fully-generated object, such as setting up
+relationships, calculating derived fields, or modifying the instance based on its generated values.
+
+.. literalinclude:: /examples/configuration/test_example_12.py
+    :caption: Using the post_build hook
+    :language: python
+
+The ``post_build`` method receives the created model instance and must return it (potentially modified).
+
+Post-Generate Hook
+^^^^^^^^^^^^^^^^^^^
+
+The :meth:`~polyfactory.factories.base.BaseFactory.post_generate` hook is called after field values
+are generated but before the model instance is created. This allows you to modify the kwargs dictionary
+that will be passed to the model constructor, making it ideal for computing derived fields or ensuring
+consistency between related fields.
+
+.. literalinclude:: /examples/configuration/test_example_13.py
+    :caption: Using the post_generate hook
+    :language: python
+
+The ``post_generate`` method receives the generated kwargs dictionary and must return it (potentially modified).
+
+.. note::
+    Both hooks are classmethods that can be overridden in your factory class. They are called automatically
+    by ``build()``, ``batch()``, and all persistence methods.

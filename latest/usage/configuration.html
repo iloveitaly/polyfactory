@@ -162,6 +162,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l2"><a class="reference internal" href="model_coverage.html">Model coverage generation</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../migration_guide/index.html">Migration Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../reference/index.html">API Reference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../reference/constants.html">constants</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/exceptions.html">exceptions</a></li>
@@ -221,6 +222,8 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#allow-none-optionals">Allow None Optionals</a></li>
 <li><a class="reference internal" href="#check-factory-fields">Check Factory Fields</a></li>
 <li><a class="reference internal" href="#use-default-values">Use Default Values</a></li>
+<li><a class="reference internal" href="#use-example-values-pydantic-v2">Use Example Values (Pydantic &gt;= V2)</a></li>
+<li><a class="reference internal" href="#forward-references">Forward References</a></li>
 </ul>
 </div><a class="js-repo-stats repo-stats flex items-center" href="https://github.com/litestar-org/polyfactory"
   data-type="github" data-user="litestar-org" data-repo="polyfactory">
@@ -312,7 +315,7 @@ You can read the reference for these in the API reference for
 </span></pre></div>
 </div>
 </div>
-<p>Seeding randomness allows you to control the random generation of values produced by the factory. This affects all <a class="reference external" href="https://docs.python.org/3/library/random.html#random.Random" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">random.Random</span></code></a>
+<p>Seeding randomness allows you to control the random generation of values produced by the factory. This affects all <a class="reference external" href="https://docs.python.org/3/library/random.html#random.Random" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">random.Random</span></code></a>
 methods as well as faker.</p>
 </section>
 <section id="setting-random">
@@ -350,7 +353,7 @@ methods as well as faker.</p>
 </div>
 </div>
 <p>This configuration option is functionally identical to the previous, with the difference being that here we are setting
-the actual instance of <a class="reference external" href="https://docs.python.org/3/library/random.html#random.Random" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">random.Random</span></code></a>. This is useful when embedding factories inside more complex logic, such as in
+the actual instance of <a class="reference external" href="https://docs.python.org/3/library/random.html#random.Random" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">random.Random</span></code></a>. This is useful when embedding factories inside more complex logic, such as in
 other libraries, as well as when factories are being dynamically generated.</p>
 </section>
 <section id="setting-faker">
@@ -688,6 +691,10 @@ Any other field definition will not be checked.</p>
 </span></pre></div>
 </div>
 </div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The default for <cite>__check_model__</cite> is changed to <cite>True</cite> in v3. Set explicitly to disable this check.</p>
+</div>
 </section>
 <section id="use-default-values">
 <h2>Use Default Values<a class="headerlink" href="#use-default-values" title="Permalink to this heading">¶</a></h2>
@@ -732,6 +739,75 @@ for a given field, provided there’s a default value for that field.</p>
 </span><span data-line="28">    <span class="k">assert</span> <span class="n">pet</span><span class="o">.</span><span class="n">sound</span> <span class="o">==</span> <span class="s2">&quot;meow&quot;</span>
 </span></pre></div>
 </div>
+</div>
+</section>
+<section id="use-example-values-pydantic-v2">
+<h2>Use Example Values (Pydantic &gt;= V2)<a class="headerlink" href="#use-example-values-pydantic-v2" title="Permalink to this heading">¶</a></h2>
+<p>If <code class="docutils literal notranslate"><span class="pre">__use_examples__</span></code> is set to <code class="docutils literal notranslate"><span class="pre">True</span></code>, then a random value from examples attribute will be used for a given field,
+provided there’s a non-empty list of examples defined for that field.</p>
+<p>By default, <code class="docutils literal notranslate"><span class="pre">__use_examples__</span></code> is set to <code class="docutils literal notranslate"><span class="pre">False.</span></code></p>
+<div class="literal-block-wrapper docutils container" id="id11">
+<div class="code-block-caption"><span class="caption-text">Use Examples Values</span><a class="headerlink" href="#id11" title="Permalink to this code">¶</a></div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Field</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="kn">from</span> <span class="nn">polyfactory.factories.pydantic_factory</span> <span class="kn">import</span> <span class="n">ModelFactory</span>
+</span><span data-line="4">
+</span><span data-line="5">
+</span><span data-line="6"><span class="k">class</span> <span class="nc">Payment</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+</span><span data-line="7">    <span class="n">amount</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</span><span data-line="8">    <span class="n">currency</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">examples</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;USD&quot;</span><span class="p">,</span> <span class="s2">&quot;EUR&quot;</span><span class="p">,</span> <span class="s2">&quot;INR&quot;</span><span class="p">])</span>
+</span><span data-line="9">
+</span><span data-line="10">
+</span><span data-line="11"><span class="k">class</span> <span class="nc">PaymentFactory</span><span class="p">(</span><span class="n">ModelFactory</span><span class="p">[</span><span class="n">Payment</span><span class="p">]):</span>
+</span><span data-line="12">    <span class="n">__use_examples__</span> <span class="o">=</span> <span class="kc">True</span>
+</span><span data-line="13">
+</span><span data-line="14">
+</span><span data-line="15"><span class="k">def</span> <span class="nf">test_use_examples</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="16">    <span class="n">instance</span> <span class="o">=</span> <span class="n">PaymentFactory</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+</span><span data-line="17">    <span class="k">assert</span> <span class="n">instance</span><span class="o">.</span><span class="n">currency</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;USD&quot;</span><span class="p">,</span> <span class="s2">&quot;EUR&quot;</span><span class="p">,</span> <span class="s2">&quot;INR&quot;</span><span class="p">]</span>
+</span></pre></div>
+</div>
+</div>
+</section>
+<section id="forward-references">
+<h2>Forward References<a class="headerlink" href="#forward-references" title="Permalink to this heading">¶</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">__forward_references__</span></code> configuration allows you to resolve forward references in type annotations.
+This is useful when dealing with recursive types that cannot be resolved automatically.</p>
+<p>By default, <code class="docutils literal notranslate"><span class="pre">__forward_references__</span></code> is set to an empty dictionary. You can provide a mapping of
+forward reference names to their resolved types.</p>
+<div class="literal-block-wrapper docutils container" id="id12">
+<div class="code-block-caption"><span class="caption-text">Forward References Configuration</span><a class="headerlink" href="#id12" title="Permalink to this code">¶</a></div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
+</span><span data-line="4"><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span>
+</span><span data-line="5">
+</span><span data-line="6"><span class="kn">from</span> <span class="nn">polyfactory.factories</span> <span class="kn">import</span> <span class="n">DataclassFactory</span>
+</span><span data-line="7">
+</span><span data-line="8"><span class="c1"># Define a recursive type using forward reference</span>
+</span><span data-line="9"><span class="n">RecursiveType</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="s2">&quot;RecursiveType&quot;</span><span class="p">],</span> <span class="nb">int</span><span class="p">]</span>
+</span><span data-line="10">
+</span><span data-line="11">
+</span><span data-line="12"><span class="nd">@dataclass</span>
+</span><span data-line="13"><span class="k">class</span> <span class="nc">RecursiveTypeModel</span><span class="p">:</span>
+</span><span data-line="14">    <span class="n">recursive_value</span><span class="p">:</span> <span class="n">RecursiveType</span>
+</span><span data-line="15">
+</span><span data-line="16">
+</span><span data-line="17"><span class="k">class</span> <span class="nc">RecursiveTypeModelFactory</span><span class="p">(</span><span class="n">DataclassFactory</span><span class="p">[</span><span class="n">RecursiveTypeModel</span><span class="p">]):</span>
+</span><span data-line="18">    <span class="n">__forward_references__</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;RecursiveType&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">}</span>
+</span><span data-line="19">
+</span><span data-line="20">
+</span><span data-line="21"><span class="k">def</span> <span class="nf">test_forward_references</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="22">    <span class="n">factory</span> <span class="o">=</span> <span class="n">RecursiveTypeModelFactory</span><span class="p">()</span>
+</span><span data-line="23">    <span class="n">result</span> <span class="o">=</span> <span class="n">factory</span><span class="o">.</span><span class="n">build</span><span class="p">()</span><span class="o">.</span><span class="n">recursive_value</span>
+</span><span data-line="24">    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">result</span><span class="p">))</span>
+</span></pre></div>
+</div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The Pydantic ModelFactory has a default forward reference mapping for <code class="docutils literal notranslate"><span class="pre">JsonValue</span></code> to resolve to <code class="docutils literal notranslate"><span class="pre">str</span></code>
+to avoid recursive issues with Pydantic’s JsonValue type.</p>
 </div>
 </section>
 </section>
@@ -788,7 +864,7 @@ for a given field, provided there’s a default value for that field.</p>
     </div>
   </div>
 </footer>
-      <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=89ec3e0c"></script>
+      <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=eecdc5d2"></script>
       <script src="../_static/doctools.js?v=888ff710"></script>
       <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

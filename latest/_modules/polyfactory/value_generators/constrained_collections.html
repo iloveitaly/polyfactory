@@ -162,6 +162,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l2"><a class="reference internal" href="../../../usage/model_coverage.html">Model coverage generation</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../../../migration_guide/index.html">Migration Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/index.html">API Reference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../reference/constants.html">constants</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../reference/exceptions.html">exceptions</a></li>
@@ -306,7 +307,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="42">        <span class="k">return</span> <span class="n">collection_type</span><span class="p">()</span>
 </span><span data-line="43">
 </span><span data-line="44">    <span class="n">min_items</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">min_items</span> <span class="k">if</span> <span class="n">min_items</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">(</span><span class="n">max_items</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">))</span>
-</span><span data-line="45">    <span class="n">max_items</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">max_items</span> <span class="k">if</span> <span class="n">max_items</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">min_items</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+</span><span data-line="45">    <span class="n">max_items</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">max_items</span><span class="p">)</span> <span class="k">if</span> <span class="n">max_items</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">min_items</span>
 </span><span data-line="46">
 </span><span data-line="47">    <span class="k">if</span> <span class="n">max_items</span> <span class="o">&lt;</span> <span class="n">min_items</span><span class="p">:</span>
 </span><span data-line="48">        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;max_items must be larger or equal to min_items&quot;</span>
@@ -374,13 +375,13 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="110">        <span class="k">return</span> <span class="p">{}</span>
 </span><span data-line="111">
 </span><span data-line="112">    <span class="n">min_items</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">min_items</span> <span class="k">if</span> <span class="n">min_items</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">(</span><span class="n">max_items</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">))</span>
-</span><span data-line="113">    <span class="n">max_items</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">max_items</span> <span class="k">if</span> <span class="n">max_items</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">min_items</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+</span><span data-line="113">    <span class="n">max_items</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">max_items</span><span class="p">)</span> <span class="k">if</span> <span class="n">max_items</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">min_items</span>
 </span><span data-line="114">
 </span><span data-line="115">    <span class="k">if</span> <span class="n">max_items</span> <span class="o">&lt;</span> <span class="n">min_items</span><span class="p">:</span>
 </span><span data-line="116">        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;max_items must be larger or equal to min_items&quot;</span>
 </span><span data-line="117">        <span class="k">raise</span> <span class="n">ParameterException</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 </span><span data-line="118">
-</span><span data-line="119">    <span class="n">length</span> <span class="o">=</span> <span class="n">factory</span><span class="o">.</span><span class="n">__random__</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="n">min_items</span><span class="p">,</span> <span class="n">max_items</span><span class="p">)</span> <span class="ow">or</span> <span class="mi">1</span>
+</span><span data-line="119">    <span class="n">length</span> <span class="o">=</span> <span class="n">factory</span><span class="o">.</span><span class="n">__random__</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="n">min_items</span><span class="p">,</span> <span class="n">max_items</span><span class="p">)</span>
 </span><span data-line="120">
 </span><span data-line="121">    <span class="n">collection</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
 </span><span data-line="122">
@@ -436,7 +437,7 @@ data-aria-dark="Switch to auto color mode">
     </div>
   </div>
 </footer>
-      <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js?v=89ec3e0c"></script>
+      <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js?v=eecdc5d2"></script>
       <script src="../../../_static/doctools.js?v=888ff710"></script>
       <script src="../../../_static/sphinx_highlight.js?v=4825356b"></script>
       <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
